@@ -1,402 +1,355 @@
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پیکار | سیستم مدیریت هوشمند</title>
+    <title>PEYKAR | Cyberpunk OS</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Vazirmatn:wght@300;500;800&display=swap" rel="stylesheet">
-    
     <style>
         :root {
-            --neon-cyan: #00ffff;
+            --neon-blue: #00f3ff;
             --neon-pink: #ff00ff;
-            --dark-bg: #050505;
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --font-main: 'Vazirmatn', sans-serif;
-            --font-accent: 'Orbitron', sans-serif;
+            --neon-yellow: #f3ff00;
+            --bg-dark: #05050a;
+            --card-bg: #10101a;
         }
 
         body {
-            font-family: var(--font-main);
-            background-color: var(--dark-bg);
-            background-image: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #050505 100%);
-            color: #fff;
+            background: var(--bg-dark);
+            color: #e0e0e0;
+            font-family: 'Tahoma', sans-serif;
             margin: 0;
-            padding: 0;
-            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        header {
-            text-align: center;
-            padding: 40px 20px;
-            border-bottom: 1px solid var(--glass-border);
+        /* Cyberpunk Background Effect */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
         }
 
-        header h1 {
-            margin: 0;
-            font-family: var(--font-accent);
-            font-size: 3.5rem;
-            background: linear-gradient(to right, var(--neon-cyan), var(--neon-pink));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.5));
-            letter-spacing: 10px;
-        }
-
-        .main-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 40px;
-            padding: 40px 20px;
-        }
-
-        .panel {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            border-radius: 30px;
-            padding: 40px;
-            width: 45%;
-            min-width: 350px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .customer-panel { border-top: 5px solid var(--neon-cyan); }
-        .piker-panel { border-top: 5px solid var(--neon-pink); }
-
-        h2 {
-            font-size: 1.8rem;
-            margin-bottom: 30px;
-            text-align: center;
-            letter-spacing: 1px;
-        }
-        .customer-panel h2 { color: var(--neon-cyan); text-shadow: 0 0 10px rgba(0,255,255,0.3); }
-        .piker-panel h2 { color: var(--neon-pink); text-shadow: 0 0 10px rgba(255,0,255,0.3); }
-
-        .form-group { margin-bottom: 25px; position: relative; }
-        label {
-            display: block;
-            margin-bottom: 10px;
-            font-size: 0.85rem;
-            color: #aaa;
-            margin-right: 5px;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 15px 20px;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 15px;
-            color: #fff;
-            font-family: var(--font-main);
-            font-size: 1rem;
-            box-sizing: border-box;
-            transition: all 0.3s ease;
-        }
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: var(--neon-cyan);
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-        }
-
-        #map-customer, #map-piker {
-            height: 220px;
-            border-radius: 20px;
-            margin: 15px 0;
-            border: 1px solid var(--glass-border);
-        }
-        #address-box {
-            font-size: 0.8rem;
-            color: var(--neon-cyan);
-            text-align: center;
-            padding: 12px;
-            background: rgba(0, 255, 255, 0.05);
-            border-radius: 12px;
-            border: 1px dashed var(--neon-cyan);
-        }
-
-        .btn-cyan {
-            width: 100%;
-            padding: 16px;
-            background: var(--neon-cyan);
-            border: none;
-            border-radius: 15px;
-            color: #000;
-            font-weight: 800;
-            font-size: 1.1rem;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
-        }
-
-        .order-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--glass-border);
-            border-right: 4px solid var(--neon-pink);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .order-card p { margin: 10px 0; font-size: 0.9rem; color: #ddd; }
-        .order-card strong { color: var(--neon-cyan); }
-
-        .status-panel {
-            margin-top: 40px;
-            padding: 25px;
-            background: rgba(0, 255, 255, 0.05);
-            border-radius: 25px;
-            border: 1px solid var(--neon-cyan);
+        .section {
             display: none;
+            padding: 20px;
+            max-width: 500px;
+            margin: 40px auto;
+            background: var(--card-bg);
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 15px var(--neon-blue);
+            border-radius: 5px;
+        }
+
+        .active { display: block; animation: flicker 0.3s ease-in; }
+
+        @keyframes flicker {
+            0% { opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        h1, h2 {
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink);
             text-align: center;
-        }
-        .status-active { display: block; animation: pulse 2s infinite; }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(0, 255, 255, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0); }
+            text-transform: uppercase;
+            letter-spacing: 3px;
         }
 
-        .btn-call {
+        input, select, button {
+            background: #000;
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 12px;
+            margin: 10px 0;
             width: 100%;
-            padding: 18px;
-            background: #2ecc71;
-            border: none;
-            border-radius: 15px;
-            color: white;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-top: 20px;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
+            box-sizing: border-box;
+            font-size: 14px;
         }
-        
-        #piker-navigation { display: none; }
-        .nav-active { display: block !important; }
 
-        @media (max-width: 850px) { 
-            .panel { width: 100%; } 
-            header h1 { font-size: 2.2rem; }
+        input:focus { outline: none; border-color: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
+
+        button {
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+
+        .btn-pink { border-color: var(--neon-pink); color: var(--neon-pink); }
+        .btn-pink:hover { background: var(--neon-pink); color: #000; }
+
+        #map { height: 250px; border: 1px solid var(--neon-blue); margin: 15px 0; }
+        
+        .order-card {
+            border: 1px solid var(--neon-yellow);
+            padding: 10px;
+            margin: 10px 0;
+            background: rgba(243, 255, 0, 0.05);
+        }
+
+        .admin-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #333;
         }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>PEYKAR</h1>
-    <p style="color: #888; letter-spacing: 2px;">NEXT-GEN LOGISTICS</p>
-</header>
+<!-- بخش ورود (Login) -->
+<div id="auth-section" class="section active">
+    <h1>PEYKAR_OS</h1>
+    <p style="text-align:center; color:var(--neon-blue)">System Login Required</p>
+    <input type="text" id="login-phone" placeholder="شماره موبایل">
+    <input type="password" id="login-pass" placeholder="رمز عبور">
+    <button onclick="handleLogin()">اجرای ورود (Login)</button>
+    <button class="btn-pink" onclick="showSection('register-section')">ایجاد حساب جدید</button>
+</div>
 
-<div class="main-container">
-    
-    <!-- پنل مشتری -->
-    <div class="panel customer-panel">
-        <h2 style="color:var(--neon-cyan)"> سفارش جدید</h2>
-        <form id="customerForm">
-            <div class="form-group">
-                <label>نام و نام خانوادگی</label>
-                <input type="text" id="custName" required placeholder="نام خود را وارد کنید...">
-            </div>
-            <div class="form-group">
-                <label>جزئیات کالای ارسالی</label>
-                <textarea id="orderText" rows="2" required placeholder="مثلاً: یک عدد نان..."></textarea>
-            </div>
-            <div class="form-group">
-                <label>شماره تماس (برای پیک)</label>
-                <input type="tel" id="customerPhone" required placeholder="مثلاً: 09123456789">
-            </div>
-            <div class="form-group">
-                <label>آدرس دقیق شما</label>
-                <input type="text" id="exactAddressInput" placeholder="مثلاً: فرشته، خیابان...">
-            </div>
-            <div class="form-group">
-                <label>موقعیت مقصد (روی نقشه)</label>
-                <div id="map-customer"></div>
-                <div id="address-box">📍 برای ثبت، روی نقشه ضربه بزنید</div>
-            </div>
-            <button type="submit" class="btn-cyan">ثبت نهایی سفارش</button>
-        </form>
+<!-- بخش ثبت نام (Register) -->
+<div id="register-section" class="section">
+    <h2>ثبت نام در شبکه</h2>
+    <input type="text" id="reg-name" placeholder="نام کاربری">
+    <input type="text" id="reg-phone" placeholder="شماره موبایل">
+    <input type="password" id="reg-pass" placeholder="رمز عبور">
+    <select id="reg-role">
+        <option value="customer">مشتری (Customer)</option>
+        <option value="piker">پیک (Piker)</option>
+    </select>
+    <button onclick="startOTP()">دریافت کد امنیتی</button>
+    <input type="text" id="otp-input" placeholder="کد ۴ رقمی" style="display:none">
+    <button id="verify-btn" onclick="verifyRegister()" style="display:none" class="btn-pink">تایید و ثبت نهایی</button>
+</div>
 
-        <div id="customerStatusSection" class="status-panel">
-            <h3 style="color:var(--neon-cyan); margin:0;">وضعیت فعلی</h3>
-            <div id="statusContent" style="margin-top:10px;"></div>
-        </div>
-    </div>
+<!-- پنل مشتری (Customer Panel) -->
+<div id="customer-panel" class="section">
+    <h2 id="cust-welcome">مشتری</h2>
+    <div id="map"></div>
+    <button onclick="createOrder()">ثبت سفارش جدید</button>
+    <div id="customer-orders"></div>
+    <button class="btn-pink" onclick="logout()">قطع اتصال (Logout)</button>
+</div>
 
-    <!-- پنل پیک -->
-    <div class="panel piker-panel">
-        <h2 style="color:var(--neon-pink)">داشبورد پیک</h2>
-        
-        <div id="orders-list-container">
-            <p id="no-orders" style="text-align: center; color: #555; font-size: 0.9rem;">در انتظار سفارش جدید...</p>
-            <div id="orders-list"></div>
-        </div>
+<!-- پنل پیک (Piker Panel) -->
+<div id="piker-panel" class="section">
+    <h2 id="piker-welcome">پیک</h2>
+    <div id="piker-orders-list"></div>
+    <button class="btn-pink" onclick="logout()">قطع اتصال (Logout)</button>
+</div>
 
-        <!-- پنل ناوبری فعال پیک -->
-        <div id="piker-navigation">
-            <div id="active-order-info" style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; margin-bottom: 15px;"></div>
-            <div id="map-piker"></div>
-            <a id="call-link" href="#" class="btn-call">📞 تماس با مشتری</a>
-            <button onclick="finishJob()" style="width:100%; padding:15px; background:#333; border:none; color:#fff; border-radius:15px; margin-top:10px; font-weight:bold;">✅ تکمیل مأموریت</button>
-        </div>
-    </div>
+<!-- پنل ادمین/طلایی (Admin Panel) -->
+<div id="admin-panel" class="section">
+    <h2 style="color:var(--neon-yellow)">ADMIN_COMMAND_CENTER</h2>
+    <div id="admin-stats"></div>
+    <h3>لیست سیاه (Banned Users)</h3>
+    <div id="blacklist-area"></div>
+    <button class="btn-pink" onclick="logout()">خروج از سیستم مدیریت</button>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    let orders = [];
-    let currentActiveOrderId = null;
-    let selectedLatLng = null;
-    let selectedMapAddress = "";
+    // --- دیتابیس و متغیرهای اصلی ---
+    let users = JSON.parse(localStorage.getItem('peykar_users') || '[]');
+    let orders = JSON.parse(localStorage.getItem('peykar_orders') || '[]');
+    let banned = JSON.parse(localStorage.getItem('peykar_banned') || '[]');
+    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+    let map;
 
-    // --- نقشه مشتری ---
-    const mapCust = L.map('map-customer').setView([35.6892, 51.3890], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapCust);
-    let custMarker = null;
+    // --- سیستم مدیریت نمایش (SPA) ---
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById(id);
+        if(target) target.classList.add('active');
+    }
 
-    mapCust.on('click', async function(e) {
-        selectedLatLng = e.latlng;
-        if (custMarker) mapCust.removeLayer(custMarker);
-        custMarker = L.marker(selectedLatLng).addTo(mapCust);
+    // --- منطق احراز هویت ---
+    function startOTP() {
+        const phone = document.getElementById('reg-phone').value;
+        const pass = document.getElementById('reg-pass').value;
+        const name = document.getElementById('reg-name').value;
+
+        if(!phone || !pass || !name) return alert("همه فیلدها پر شود!");
+        if(users.find(u => u.phone === phone)) return alert("این شماره قبلاً ثبت شده!");
+
+        window.tempOTP = Math.floor(1000 + Math.random() * 9000);
+        alert("کد امنیتی شما در شبکه: " + window.tempOTP);
         
-        document.getElementById('address-box').innerText = "⏳ در حال دریافت آدرس...";
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${e.latlng.lat}&lon=${e.latlng.lng}&accept-language=fa`);
-            const data = await res.json();
-            let displayName = data.display_name.split(',');
-            selectedMapAddress = `${displayName[0] || ''}, ${displayName[1] || ''}, ${displayName[2] || ''}`.replace(/^, |,$|, ,/g, '').trim();
-            document.getElementById('address-box').innerText = "📍 " + selectedMapAddress;
-        } catch (err) {
-            document.getElementById('address-box').innerText = "خطا در دریافت آدرس";
-        }
-    });
+        document.getElementById('otp-input').style.display = 'block';
+        document.getElementById('verify-btn').style.display = 'block';
+    }
 
-    // --- نقشه پیک ---
-    const mapPiker = L.map('map-piker').setView([35.6892, 51.3890], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapPiker);
-    let pikerMarker = null;
+    function verifyRegister() {
+        const code = document.getElementById('otp-input').value;
+        if(code != window.tempOTP) return alert("کد اشتباه است!");
 
-    // --- ثبت سفارش ---
-    document.getElementById('customerForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (!selectedLatLng) { alert("لطفاً مقصد را روی نقشه مشخص کنید!"); return; }
-
-        const order = {
-            id: Date.now(),
-            customerName: document.getElementById('custName').value,
-            orderDetail: document.getElementById('orderText').value,
-            customerPhone: document.getElementById('customerPhone').value,
-            exactAddress: document.getElementById('exactAddressInput').value, // آدرس تایپ شده
-            mapAddress: selectedMapAddress, // آدرس از نقشه
-            lat: selectedLatLng.lat,
-            lng: selectedLatLng.lng,
-            time: new Date().toLocaleString('fa-IR'),
-            status: 'waiting'
+        const newUser = {
+            name: document.getElementById('reg-name').value,
+            phone: document.getElementById('reg-phone').value,
+            pass: document.getElementById('reg-pass').value,
+            role: document.getElementById('reg-role').value
         };
 
-        orders.push(order);
-        this.reset();
-        selectedLatLng = null;
-        if(custMarker) mapCust.removeLayer(custMarker);
-        document.getElementById('address-box').innerText = "📍 برای ثبت، روی نقشه ضربه بزنید";
-        
-        alert("✅ سفارش شما با موفقیت ثبت شد!");
-        updateCustomerStatusPanel();
-        renderPikerOrders();
-    });
+        users.push(newUser);
+        localStorage.setItem('peykar_users', JSON.stringify(users));
+        alert("ثبت نام با موفقیت انجام شد.");
+        showSection('auth-section');
+    }
 
-    function renderPikerOrders() {
-        const listDiv = document.getElementById('orders-list');
-        const waitingOrders = orders.filter(o => o.status === 'waiting');
-        const noOrdersMsg = document.getElementById('no-orders');
+    function handleLogin() {
+        const phone = document.getElementById('login-phone').value;
+        const pass = document.getElementById('login-pass').value;
 
-        listDiv.innerHTML = '';
-        if (waitingOrders.length === 0) {
-            noOrdersMsg.style.display = 'block';
+        // چک کردن لیست سیاه
+        if(banned.includes(phone)) {
+            alert("هشدار: حساب شما مسدود (BANNED) شده است!");
+            return;
+        }
+
+        // بررسی ادمین (حساب طلایی)
+        if(phone === '09371130903') {
+            currentUser = { name: 'Admin', phone: '09371130903', role: 'admin' };
+            completeLogin();
+            return;
+        }
+
+        // بررسی کاربران عادی
+        const user = users.find(u => u.phone === phone && u.pass === pass);
+        if(user) {
+            currentUser = user;
+            completeLogin();
         } else {
-            noOrdersMsg.style.display = 'none';
-            waitingOrders.forEach(order => {
-                const card = document.createElement('div');
-                card.className = 'order-card';
-                card.innerHTML = `
-                    <p><strong style="color:var(--neon-pink)">👤 مشتری:</strong> ${order.customerName}</p>
-                    <p><strong style="color:var(--neon-cyan)">📦 سفارش:</strong> ${order.orderDetail}</p>
-                    <button class="btn-pink" onclick="acceptOrder(${order.id})" style="width:100%; padding:10px; background:var(--neon-pink); border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">پذیرش فوری</button>
-                `;
-                listDiv.appendChild(card);
-            });
+            alert("خطا در احراز هویت! شماره یا رمز اشتباه است.");
         }
     }
 
-    window.acceptOrder = function(id) {
-        const orderIndex = orders.findIndex(o => o.id === id);
-        if (orderIndex !== -1) {
-            orders[orderIndex].status = 'accepted';
-            currentActiveOrderId = id;
+    function completeLogin() {
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        loadDashboard();
+    }
+
+    function loadDashboard() {
+        if(!currentUser) return;
+
+        if(currentUser.role === 'admin') {
+            showSection('admin-panel');
+            renderAdmin();
+        } else if(currentUser.role === 'customer') {
+            showSection('customer-panel');
+            document.getElementById('cust-welcome').innerText = `خوش آمدید ${currentUser.name}`;
+            initMap();
+            renderCustomerOrders();
+        } else if(currentUser.role === 'piker') {
+            showSection('piker-panel');
+            document.getElementById('piker-welcome').innerText = `پیک: ${currentUser.name}`;
             renderPikerOrders();
-            showActiveOrderForPiker(orders[orderIndex]);
-            updateCustomerStatusPanel();
         }
-    };
+    }
 
-    function showActiveOrderForPiker(order) {
-        document.getElementById('orders-list-container').style.display = 'none';
-        const nav = document.getElementById('piker-navigation');
-        nav.style.display = 'block';
-        nav.classList.add('nav-active');
+    // --- منطق مشتری (Customer) ---
+    function initMap() {
+        if(!map) {
+            map = L.map('map').setView([35.6892, 51.3890], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        }
+    }
+
+    function createOrder() {
+        const newOrder = {
+            id: Date.now(),
+            customerPhone: currentUser.phone,
+            customerName: currentUser.name,
+            status: 'pending', // pending, active, delivered
+            lat: 35.6892,
+            lng: 51.3890
+        };
+        orders.push(newOrder);
+        localStorage.setItem('peykar_orders', JSON.stringify(orders));
+        alert("سفارش با موفقیت در شبکه ثبت شد!");
+        renderCustomerOrders();
+    }
+
+    function renderCustomerOrders() {
+        const container = document.getElementById('customer-orders');
+        const myOrders = orders.filter(o => o.customerPhone === currentUser.phone);
+        container.innerHTML = "<h3>سفارشات من:</h3>";
+        myOrders.forEach(o => {
+            container.innerHTML += `<div class="order-card">ID: ${o.id} | وضعیت: ${o.status}</div>`;
+        });
+    }
+
+    // --- منطق پیک (Piker) ---
+    function renderPikerOrders() {
+        const container = document.getElementById('piker-orders-list');
+        const pendingOrders = orders.filter(o => o.status === 'pending');
+        container.innerHTML = "<h3>سفارشات در دسترس:</h3>";
+        if(pendingOrders.length === 0) container.innerHTML += "<p>سفارش جدیدی موجود نیست.</p>";
         
-        document.getElementById('active-order-info').innerHTML = `
-            <div style="border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 10px;">
-                <p style="margin:0; color:var(--neon-cyan); font-weight:bold;">📋 جزئیات مأموریت</p>
-            </div>
-            <p><strong style="color:var(--neon-pink)">👤 مشتری:</strong> ${order.customerName}</p>
-            <p><strong style="color:var(--neon-pink)">📞 تماس:</strong> <span style="color:var(--neon-cyan);">${order.customerPhone}</span></p>
-            <p><strong style="color:var(--neon-pink)">📝 آدرس تایپ شده:</strong> <br><small>${order.exactAddress || 'ثبت نشده'}</small></p>
-            <p><strong style="color:var(--neon-pink)">📍 آدرس روی نقشه:</strong> <br><small>${order.mapAddress}</small></p>
-            <p><strong style="color:var(--neon-pink)">📦 کالا:</strong> ${order.orderDetail}</p>
-        `;
+        pendingOrders.forEach(o => {
+            container.innerHTML += `
+                <div class="order-card">
+                    مشتری: ${o.customerName}<br>
+                    <button onclick="acceptOrder(${o.id})">پذیرش سفارش</button>
+                </div>`;
+        });
+    }
 
-        document.getElementById('call-link').href = `tel:${order.customerPhone}`;
-        
-        mapPiker.setView([order.lat, order.lng], 15);
-        if (pikerMarker) mapPiker.removeLayer(pikerMarker);
-        pikerMarker = L.marker([order.lat, order.lng]).addTo(mapPiker);
-    };
-
-    window.finishJob = function() {
-        alert("🎉 مأموریت با موفقیت به پایان رسید!");
-        const order = orders.find(o => o.id === currentActiveOrderId);
-        if (order) order.status = 'completed';
-        currentActiveOrderId = null;
-        document.getElementById('orders-list-container').style.display = 'block';
-        document.getElementById('piker-navigation').style.display = 'none';
+    function acceptOrder(orderId) {
+        const orderIndex = orders.findIndex(o => o.id === orderId);
+        orders[orderIndex].status = 'active';
+        orders[orderIndex].pikerPhone = currentUser.phone;
+        localStorage.setItem('peykar_orders', JSON.stringify(orders));
+        alert("سفارش پذیرفته شد!");
         renderPikerOrders();
-        updateCustomerStatusPanel();
-    };
+    }
 
-    function updateCustomerStatusPanel() {
-        const section = document.getElementById('customerStatusSection');
-        const content = document.getElementById('statusContent');
-        const lastOrder = orders.length > 0 ? orders[orders.length - 1] : null;
+    // --- منطق ادمین (Admin/Golden Account) ---
+    function renderAdmin() {
+        const blacklistDiv = document.getElementById('blacklist-area');
+        const statsDiv = document.getElementById('admin-stats');
+        
+        statsDiv.innerHTML = `کاربران: ${users.length} | سفارشات: ${orders.length}`;
+        
+        blacklistDiv.innerHTML = "";
+        banned.forEach((phone, index) => {
+            blacklistDiv.innerHTML += `
+                <div class="admin-item">
+                    <span>${phone}</span>
+                    <button style="width:auto; padding:2px 10px" onclick="unban('${phone}')">بازگرداندن</button>
+                </div>`;
+        });
+    }
 
-        if (lastOrder) {
-            section.classList.add('status-active');
-            section.style.display = 'block';
-            let text = "", color = "";
+    // (در دنیای واقعی اینجا تابع Ban هم می‌گذاریم، فعلاً فقط Unban)
+    function unban(phone) {
+        banned = banned.filter(p => p !== phone);
+        localStorage.setItem('peykar_banned', JSON.stringify(banned));
+        renderAdmin();
+    }
 
-            if (lastOrder.status === 'waiting') { text = "⏳ در انتظار پذیرش..."; color = "var(--neon-cyan)"; }
-            else if (lastOrder.status === 'accepted') { text = "🚀 پیک در راه است!"; color = "var(--neon-pink)"; }
-            else { text = "✅ تحویل شد."; color = "#2ecc71"; }
+    // --- خروج ---
+    function logout() {
+        localStorage.removeItem('currentUser');
+        location.reload();
+    }
 
-            content.innerHTML = `<p style="font-weight:bold; color:${color};">${text}</p>`;
-        } else {
-            section.style.display = 'none';
-        }
+    // لود اولیه
+    if(currentUser) {
+        loadDashboard();
     }
 </script>
+
 </body>
 </html>
